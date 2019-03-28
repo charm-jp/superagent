@@ -43,7 +43,7 @@ function mixin(obj) {
  * @api public
  */
 
-RequestBase.prototype.clearTimeout = function _clearTimeout(){
+RequestBase.prototype.clearTimeout = function _clearTimeout() {
   clearTimeout(this._timer);
   clearTimeout(this._responseTimeoutTimer);
   clearTimeout(this._uploadTimeoutTimer);
@@ -62,7 +62,7 @@ RequestBase.prototype.clearTimeout = function _clearTimeout(){
  * @api public
  */
 
-RequestBase.prototype.parse = function parse(fn){
+RequestBase.prototype.parse = function parse(fn) {
   this._parser = fn;
   return this;
 };
@@ -85,7 +85,7 @@ RequestBase.prototype.parse = function parse(fn){
  * @api public
  */
 
-RequestBase.prototype.responseType = function(val){
+RequestBase.prototype.responseType = function(val) {
   this._responseType = val;
   return this;
 };
@@ -99,7 +99,7 @@ RequestBase.prototype.responseType = function(val){
  * @api public
  */
 
-RequestBase.prototype.serialize = function serialize(fn){
+RequestBase.prototype.serialize = function serialize(fn) {
   this._serializer = fn;
   return this;
 };
@@ -118,16 +118,16 @@ RequestBase.prototype.serialize = function serialize(fn){
  * @api public
  */
 
-RequestBase.prototype.timeout = function timeout(options){
-  if (!options || 'object' !== typeof options) {
+RequestBase.prototype.timeout = function timeout(options) {
+  if (!options || typeof options !== 'object') {
     this._timeout = options;
     this._responseTimeout = 0;
     this._uploadTimeout = 0;
     return this;
   }
 
-  for(const option in options) {
-    switch(option) {
+  for (const option in options) {
+    switch (option) {
       case 'deadline':
         this._timeout = options.deadline;
         break;
@@ -138,7 +138,7 @@ RequestBase.prototype.timeout = function timeout(options){
         this._uploadTimeout = options.upload;
         break;
       default:
-        console.warn("Unknown timeout option", option);
+        console.warn('Unknown timeout option', option);
     }
   }
   return this;
@@ -155,7 +155,7 @@ RequestBase.prototype.timeout = function timeout(options){
  * @api public
  */
 
-RequestBase.prototype.retry = function retry(count, fn){
+RequestBase.prototype.retry = function retry(count, fn) {
   // Default to 1 if no count passed or true
   if (arguments.length === 0 || count === true) count = 1;
   if (count <= 0) count = 0;
@@ -165,12 +165,7 @@ RequestBase.prototype.retry = function retry(count, fn){
   return this;
 };
 
-const ERROR_CODES = [
-  'ECONNRESET',
-  'ETIMEDOUT',
-  'EADDRINFO',
-  'ESOCKETTIMEDOUT'
-];
+const ERROR_CODES = ['ECONNRESET', 'ETIMEDOUT', 'EADDRINFO', 'ESOCKETTIMEDOUT'];
 
 /**
  * Determine if a request should be retried.
@@ -190,7 +185,7 @@ RequestBase.prototype._shouldRetry = function(err, res) {
       if (override === true) return true;
       if (override === false) return false;
       // undefined falls back to defaults
-    } catch(e) {
+    } catch (e) {
       console.error(e);
     }
   }
@@ -212,7 +207,6 @@ RequestBase.prototype._shouldRetry = function(err, res) {
  */
 
 RequestBase.prototype._retry = function() {
-
   this.clearTimeout();
 
   // node
@@ -239,7 +233,9 @@ RequestBase.prototype.then = function then(resolve, reject) {
   if (!this._fullfilledPromise) {
     const self = this;
     if (this._endCalled) {
-      console.warn("Warning: superagent request was sent twice, because both .end() and .then() were called. Never call .end() if you use promises");
+      console.warn(
+        'Warning: superagent request was sent twice, because both .end() and .then() were called. Never call .end() if you use promises'
+      );
     }
     this._fullfilledPromise = new Promise((innerResolve, innerReject) => {
       self.on('abort', () => {
@@ -259,7 +255,7 @@ RequestBase.prototype.then = function then(resolve, reject) {
   return this._fullfilledPromise.then(resolve, reject);
 };
 
-RequestBase.prototype['catch'] = function(cb) {
+RequestBase.prototype.catch = function(cb) {
   return this.then(undefined, cb);
 };
 
@@ -273,7 +269,7 @@ RequestBase.prototype.use = function use(fn) {
 };
 
 RequestBase.prototype.ok = function(cb) {
-  if ('function' !== typeof cb) throw Error("Callback required");
+  if (typeof cb !== 'function') throw new Error('Callback required');
   this._okCallback = cb;
   return this;
 };
@@ -299,7 +295,7 @@ RequestBase.prototype._isResponseOK = function(res) {
  * @api public
  */
 
-RequestBase.prototype.get = function(field){
+RequestBase.prototype.get = function(field) {
   return this._header[field.toLowerCase()];
 };
 
@@ -338,7 +334,7 @@ RequestBase.prototype.getHeader = RequestBase.prototype.get;
  * @api public
  */
 
-RequestBase.prototype.set = function(field, val){
+RequestBase.prototype.set = function(field, val) {
   if (isObject(field)) {
     for (const key in field) {
       this.set(key, field[key]);
@@ -362,7 +358,7 @@ RequestBase.prototype.set = function(field, val){
  *
  * @param {String} field
  */
-RequestBase.prototype.unset = function(field){
+RequestBase.prototype.unset = function(field) {
   delete this._header[field.toLowerCase()];
   delete this.header[field];
   return this;
@@ -389,12 +385,14 @@ RequestBase.prototype.unset = function(field){
  */
 RequestBase.prototype.field = function(name, val) {
   // name should be either a string or an object.
-  if (null === name || undefined === name) {
+  if (name === null || undefined === name) {
     throw new Error('.field(name, val) name can not be empty');
   }
 
   if (this._data) {
-    throw new Error(".field() can't be used if .send() is used. Please use only .send() or only .field() & .attach()");
+    throw new Error(
+      ".field() can't be used if .send() is used. Please use only .send() or only .field() & .attach()"
+    );
   }
 
   if (isObject(name)) {
@@ -412,11 +410,11 @@ RequestBase.prototype.field = function(name, val) {
   }
 
   // val should be defined now
-  if (null === val || undefined === val) {
+  if (val === null || undefined === val) {
     throw new Error('.field(name, val) val can not be empty');
   }
-  if ('boolean' === typeof val) {
-    val = '' + val;
+  if (typeof val === 'boolean') {
+    val = String(val);
   }
   this._getFormData().append(name, val);
   return this;
@@ -428,7 +426,7 @@ RequestBase.prototype.field = function(name, val) {
  * @return {Request}
  * @api public
  */
-RequestBase.prototype.abort = function(){
+RequestBase.prototype.abort = function() {
   if (this._aborted) {
     return this;
   }
@@ -484,7 +482,7 @@ RequestBase.prototype.withCredentials = function(on) {
  * @api public
  */
 
-RequestBase.prototype.redirects = function(n){
+RequestBase.prototype.redirects = function(n) {
   this._maxRedirects = n;
   return this;
 };
@@ -496,9 +494,9 @@ RequestBase.prototype.redirects = function(n){
  * @param {Number} n
  * @return {Request} for chaining
  */
-RequestBase.prototype.maxResponseSize = function(n){
-  if ('number' !== typeof n) {
-    throw TypeError("Invalid argument");
+RequestBase.prototype.maxResponseSize = function(n) {
+  if (typeof n !== 'number') {
+    throw new TypeError('Invalid argument');
   }
   this._maxResponseSize = n;
   return this;
@@ -518,7 +516,7 @@ RequestBase.prototype.toJSON = function() {
     method: this.method,
     url: this.url,
     data: this._data,
-    headers: this._header,
+    headers: this._header
   };
 };
 
@@ -562,12 +560,14 @@ RequestBase.prototype.toJSON = function() {
  * @api public
  */
 
-RequestBase.prototype.send = function(data){
+RequestBase.prototype.send = function(data) {
   const isObj = isObject(data);
   let type = this._header['content-type'];
 
   if (this._formData) {
-    throw new Error(".send() can't be used if .attach() or .field() is used. Please use only .send() or only .field() & .attach()");
+    throw new Error(
+      ".send() can't be used if .attach() or .field() is used. Please use only .send() or only .field() & .attach()"
+    );
   }
 
   if (isObj && !this._data) {
@@ -577,7 +577,7 @@ RequestBase.prototype.send = function(data){
       this._data = {};
     }
   } else if (data && this._data && this._isHost(this._data)) {
-    throw Error("Can't merge these send calls");
+    throw new Error("Can't merge these send calls");
   }
 
   // merge
@@ -585,14 +585,12 @@ RequestBase.prototype.send = function(data){
     for (const key in data) {
       this._data[key] = data[key];
     }
-  } else if ('string' == typeof data) {
+  } else if (typeof data === 'string') {
     // default to x-www-form-urlencoded
     if (!type) this.type('form');
     type = this._header['content-type'];
-    if ('application/x-www-form-urlencoded' == type) {
-      this._data = this._data
-        ? `${this._data}&${data}`
-        : data;
+    if (type == 'application/x-www-form-urlencoded') {
+      this._data = this._data ? `${this._data}&${data}` : data;
     } else {
       this._data = (this._data || '') + data;
     }
@@ -648,7 +646,7 @@ RequestBase.prototype.sortQuery = function(sort) {
  *
  * @api private
  */
-RequestBase.prototype._finalizeQueryString = function(){
+RequestBase.prototype._finalizeQueryString = function() {
   const query = this._query.join('&');
   if (query) {
     this.url += (this.url.indexOf('?') >= 0 ? '&' : '?') + query;
@@ -659,7 +657,7 @@ RequestBase.prototype._finalizeQueryString = function(){
     const index = this.url.indexOf('?');
     if (index >= 0) {
       const queryArr = this.url.substring(index + 1).split('&');
-      if ('function' === typeof this._sort) {
+      if (typeof this._sort === 'function') {
         queryArr.sort(this._sort);
       } else {
         queryArr.sort();
@@ -670,7 +668,9 @@ RequestBase.prototype._finalizeQueryString = function(){
 };
 
 // For backwards compat only
-RequestBase.prototype._appendQueryString = () => {console.trace("Unsupported");}
+RequestBase.prototype._appendQueryString = () => {
+  console.trace('Unsupported');
+};
 
 /**
  * Invoke callback with timeout error.
@@ -678,7 +678,7 @@ RequestBase.prototype._appendQueryString = () => {console.trace("Unsupported");}
  * @api private
  */
 
-RequestBase.prototype._timeoutError = function(reason, timeout, errno){
+RequestBase.prototype._timeoutError = function(reason, timeout, errno) {
   if (this._aborted) {
     return;
   }
@@ -703,7 +703,11 @@ RequestBase.prototype._setTimeouts = function() {
   // response timeout
   if (this._responseTimeout && !this._responseTimeoutTimer) {
     this._responseTimeoutTimer = setTimeout(() => {
-      self._timeoutError('Response timeout of ', self._responseTimeout, 'ETIMEDOUT');
+      self._timeoutError(
+        'Response timeout of ',
+        self._responseTimeout,
+        'ETIMEDOUT'
+      );
     }, this._responseTimeout);
   }
 
